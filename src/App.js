@@ -6,19 +6,28 @@ function App() {
 	const [characters, setCharacters] = useState([]);
 	const [inputValue, setInputValue] = useState("");
 
+	const getFilteredCharacters = (value, charactersList) => {
+		if (!value) return charactersList;
+		return charactersList.filter((character) =>
+			character.name.toLowerCase().includes(value.toLowerCase())
+		);
+	};
+
+	const downloadData = async (apiUrl) => {
+		try {
+			const respuesta = await fetch(apiUrl);
+			const datos = await respuesta.json();
+			setCharacters(datos.results);
+		} catch (error) {
+			console.error("Error al cargar los datos:", error);
+		}
+	};
+
 	useEffect(() => {
-		fetch("https://rickandmortyapi.com/api/character")
-			.then((res) => {
-				return res.json();
-			})
-			.then((data) => {
-				setCharacters(data.results);
-			});
+		downloadData("https://rickandmortyapi.com/api/character");
 	}, []);
 
-	handleOnChange = (event) => {
-		console.log(event.target.value);
-	};
+	const datosFiltrados = getFilteredCharacters(inputValue, characters);
 
 	return (
 		<div className="App">
@@ -29,25 +38,23 @@ function App() {
 					type="text"
 					id="Search"
 					value={inputValue}
-					onChange={handleOnChange}
+					onChange={(event) => {
+						setInputValue(event.target.value);
+					}}
 				/>
-				<input type="submit" />
 			</form>
 			<ul>
-				{characters ? (
-					characters.map((character) => {
+				{!characters ? (
+					<div>Loading...</div>
+				) : (
+					datosFiltrados.map((character, index) => {
 						return (
-							<li>
+							<li key={index}>
 								<span>{character.name}</span> <span>{character.status}</span>
 							</li>
 						);
 					})
-				) : (
-					<div>Loading...</div>
 				)}
-				<li>
-					<span>name</span> <span>Live</span>
-				</li>
 			</ul>
 		</div>
 	);
